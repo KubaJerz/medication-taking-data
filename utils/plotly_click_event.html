@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Plotly Click Event</title>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+</head>
+<body>
+  <div id="plot"></div>
+  <script>
+    // Read the CSV data from a file
+    fetch('acceleration.csv')
+      .then(response => response.text())
+      .then(data => {
+        const rows = data.trim().split('\n');
+        const header = rows.shift().split(',');
+        const values = rows.map(row => row.split(','));
+
+        // Parse the data
+        const parsedData = values.map(row => {
+          const obj = {};
+          header.forEach((key, i) => obj[key] = row[i]);
+          return obj;
+        });
+
+        // Convert timestamp to datetime object
+        const nanoTimestamp = parsedData[0]['timestamp'];
+        //const unixTimestamp = (nanoTimestamp.match(/\d+/)).group();
+        //const datetimeObject = new Date(parseInt(unixTimestamp) / 1000.0);
+        const datetimeObject =  new Date(nanoTimestamp);
+
+        // Preprocess the data
+        const preprocessedData = parsedData.map(row => {
+          const timestamp = new Date(datetimeObject.getTime() + parseInt(row.timestamp) / 1e6);
+          return {
+            timestamp,
+            x: parseFloat(row.x),
+            y: parseFloat(row.y),
+            z: parseFloat(row.z)
+          };
+        });
+
+        // Create the traces
+        const xTrace = {
+          x: preprocessedData.map(row => row.timestamp),
+          y: preprocessedData.map(row => row.x),
+          mode: 'lines',
+          name: 'x'
+        };
+
+        const yTrace = {
+          x: preprocessedData.map(row => row.timestamp),
+          y: preprocessedData.map(row => row.y),
+          mode: 'lines',
+          name: 'y'
+        };
+
+        const zTrace = {
+          x: preprocessedData.map(row => row.timestamp),
+          y: preprocessedData.map(row => row.z),
+          mode: 'lines',
+          name: 'z'
+        };
+
+        // Create the layout
+        const layout = {
+          title: 'Click to Record Start and End Times',
+          xaxis: {
+            title: 'Time'
+          },
+          yaxis: {
+            title: 'Value'
+          }
+        };
+
+        // Create the plot
+        Plotly.newPlot('plot', [xTrace, yTrace, zTrace], layout);
+
+        // Add click event handler
+        const plotEl = document.getElementById('plot');
+        const intervals = {};
+        plotEl.on('plotly_click', (data) => {
+          const clickTime = data.points[0].x;
+          const traceName = data.points[0].curveNumber;
+
+          if (!intervals[traceName]) {
+            intervals[traceName] = [];
+          }
+
+          const currentIntervals = intervals[traceName];
+
+          // Check if the click is inside an existing interval
+          const existingInterval = currentIntervals.find(interval => clickTime >= interval.start && clickTime <= interval.end);
+          if (existingInterval) {
+            console.log(`Click inside existing interval for ${traceName}: ${existingInterval.start} - ${existingInterval.end}`);
+            return;
+          }
+
+          // Find the last interval for the trace
+          const lastInterval = currentIntervals[currentIntervals.length - 1];
+
+          // If there is no last interval or the click is after the last interval's end time, create a new interval
+          if (!lastInterval || clickTime > lastInterval.end) {
+            const newInterval = { start: clickTime, end: null };
+            currentIntervals.push(newInterval);
+            console.log(`New interval started for ${traceName}: ${newInterval.start}`);
+          } else {
+            // If the click is after the last interval's start time, update the end time of the last interval
+            lastInterval.end = clickTime;
+            console.log(`Interval ended for ${traceName}: ${lastInterval.start} - ${lastInterval.end}`);
+          }
+        });
+      })
+      .catch(error => console.error(error));
+  </script>
+</body>
+</html>
