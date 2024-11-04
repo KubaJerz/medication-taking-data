@@ -21,11 +21,22 @@ import os
 
 raw_data_dir = '/home/kuba/Documents/Data/Raw/Listerine/3_final'
 
+#if 4 classes
 labels_to_one_hot = {
     'leftWater' : [[0],[0],[0],[1]],
     'leftLister' : [[0],[0],[1],[0]],
     'rightWater' : [[0],[1],[0],[0]],
     'rightLister' : [[1],[0],[0],[0]]
+
+}
+
+
+#if 2 classes
+labels_to_one_hot = {
+    'leftWater' : [0],
+    'leftLister' : [1],
+    'rightWater' : [0],
+    'rightLister' : [1]
 
 }
 
@@ -173,7 +184,7 @@ def getDataSet(randomState=69, train_sets=['00','01','02','03','04','05','06','0
     test_data = shuffle_dataset(test_data, randomState)
 
     return train_data, test_data
-    
+
 if __name__ == "__main__":
     train_dataset, test_dataset = getDataSet()
     print(f"Train dataset size: {len(train_dataset)}")

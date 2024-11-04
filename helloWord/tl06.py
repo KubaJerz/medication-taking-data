@@ -154,7 +154,7 @@ def run_training(
     train_loader = DataLoader(train_dataset, batch_size=train_batch_size, shuffle=True)
     test_loader = DataLoader(test_dataset, batch_size=test_batch_size, shuffle=False)
 
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.BCEWithLogitsLoss()
     optimizer = optim.Adam(model.parameters())
 
     warnings.filterwarnings("ignore", category=UserWarning, module="torchmetrics")
