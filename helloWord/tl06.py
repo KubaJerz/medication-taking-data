@@ -35,17 +35,14 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
         # Training loop
         for X_batch, y_batch in train_loader:
-            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device).squeeze() 
             
             optimizer.zero_grad()
             logits = model.forward(X_batch)
-
-            print(logits.dtype)
-            print(y_batch.dtype)
             
             loss = criterion(logits, y_batch)
 
-            f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item()
+            f1 = multiclass_f1_score((torch.sigmoid(logits) > 0.5).long(), y_batch.long(), num_classes=model.num_classes,  average="macro").item()
 
             loss.backward()
             optimizer.step()
@@ -64,15 +61,15 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
         with torch.no_grad():
             for X_batch, y_batch in test_loader:
-                X_batch, y_batch = X_batch.to(device), y_batch.to(device)
+                X_batch, y_batch = X_batch.to(device), y_batch.to(device).squeeze() 
 
                 devlogits = model(X_batch)
                 #for loss
                 dev_loss = criterion(devlogits, y_batch).item()
 
                 #for confusion matrix
-                predicted_labels = torch.argmax(devlogits, dim=1).cpu().numpy()
-                true_labels = torch.argmax(y_batch, dim=1).cpu().numpy()
+                predicted_labels = (torch.sigmoid(devlogits) > 0.5).long().cpu().numpy()
+                true_labels = y_batch.cpu().numpy()
                 batch_conf_matrix = confusion_matrix(true_labels, predicted_labels, labels=range(model.num_classes))
                 if total_conf_matrix is None:
                     total_conf_matrix = batch_conf_matrix
@@ -81,7 +78,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
         
                 
                 #for f1 score
-                dev_f1 = multiclass_f1_score(devlogits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item() 
+                dev_f1 = multiclass_f1_score((torch.sigmoid(devlogits) > 0.5).long(), y_batch.long(), num_classes=model.num_classes,  average="macro").item()
                 
                 test_epoch_loss += dev_loss
                 test_epoch_f1 += dev_f1

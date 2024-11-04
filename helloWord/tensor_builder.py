@@ -23,20 +23,20 @@ raw_data_dir = '/home/kuba/Documents/Data/Raw/Listerine/3_final'
 
 #if 4 classes
 labels_to_one_hot = {
-    'leftWater' : [[0],[0],[0],[1]],
-    'leftLister' : [[0],[0],[1],[0]],
-    'rightWater' : [[0],[1],[0],[0]],
-    'rightLister' : [[1],[0],[0],[0]]
+    'leftWater' : [[0.0],[0.0],[0.0],[1.0]],
+    'leftLister' : [[0.0],[0.0],[1.0],[0.0]],
+    'rightWater' : [[0.0],[1.0],[0.0],[0.0]],
+    'rightLister' : [[1.0],[0.0],[0.0],[0.0]]
 
 }
 
 
 #if 2 classes
 labels_to_one_hot = {
-    'leftWater' : [0],
-    'leftLister' : [1],
-    'rightWater' : [0],
-    'rightLister' : [1]
+    'leftWater' : [0.0],
+    'leftLister' : [1.0],
+    'rightWater' : [0.0],
+    'rightLister' : [1.0]
 
 }
 
