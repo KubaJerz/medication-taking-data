@@ -4,6 +4,7 @@ from tqdm import tqdm
 import warnings
 import logging
 from sklearn.metrics import confusion_matrix
+import random
 
 
 
@@ -135,9 +136,13 @@ def run_training(
         training_id=training_id,
         sub_dir=sub_dir #this is only a vald value when training with the tw since it specifly where to save the sub models that were genorated
         )
-        
-
-    train_dataset, test_dataset = getDataSet(randomState=random_state, trainPercent=train_percent)
+    
+    #Randomy pic a set of particant to train on 
+    random.seed(random_state) 
+    numbers = ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16"]
+    sample_size = int(len(numbers) * 0.7)
+    train_sets = random.sample(numbers, sample_size)
+    train_dataset, test_dataset = getDataSet(randomState=random_state, train_sets=train_sets, window_size=300, stride=50, flatten=True)
 
     if train_batch_size == -1:
         train_batch_size = len(train_dataset)
