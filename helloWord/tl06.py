@@ -40,6 +40,9 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             optimizer.zero_grad()
             logits = model.forward(X_batch)
 
+            print(logits.dtype)
+            print(y_batch.dtype)
+            
             loss = criterion(logits, y_batch)
 
             f1 = multiclass_f1_score(logits, torch.argmax(y_batch, dim=1), num_classes=model.num_classes,  average="macro").item()
