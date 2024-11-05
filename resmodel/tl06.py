@@ -40,7 +40,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
             optimizer.zero_grad()
             logits = model.forward(X_batch)
             
-            loss = criterion(logits, y_batch)
+            loss = criterion(logits.flatten(), y_batch)
 
             f1 = multiclass_f1_score((torch.sigmoid(logits) > 0.5).long(), y_batch.long(), num_classes=model.num_classes,  average="macro").item()
 
@@ -65,7 +65,7 @@ def train(model, train_loader, test_loader, criterion, optimizer, device, epochs
 
                 devlogits = model(X_batch)
                 #for loss
-                dev_loss = criterion(devlogits, y_batch).item()
+                dev_loss = criterion(devlogits.flatten(), y_batch).item()
 
                 #for confusion matrix
                 predicted_labels = (torch.sigmoid(devlogits) > 0.5).long().cpu().numpy()
