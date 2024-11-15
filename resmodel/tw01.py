@@ -70,6 +70,7 @@ def main():
 
     for i in range(num_models):
         #random pick
+        random.seed()
         hyperparams = {
             'id': f"{id}_{i}",
             'window_size': int(random.uniform(*hyper_ranges['window_size']) * 100),

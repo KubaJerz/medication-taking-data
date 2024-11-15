@@ -153,42 +153,76 @@ def participant_accumulator(dir, window_size, stride, flatten):
         
     return torch.tensor(acc_full), torch.tensor(gyro_full), torch.tensor(y_full)
 
-
-def getDataSet(randomState=69, train_sets=['00','01','02','03','04','05','06','07','08','09','10','11'], window_size=300, stride=50, flatten=True):
-    train_datasets = []
-    test_datasets = []
-
-
-    for dir in sorted(os.listdir(raw_data_dir)):
-        if dir != '.DS_Store':
-            X_acc, X_gyro, y = participant_accumulator(os.path.join(raw_data_dir, dir), window_size, stride, flatten)
-            # Shuffle within each dataset and add to train or test
-            if dir in train_sets:
-                train_datasets.append(CombinedDataSet(X_acc=X_acc, X_gyro=X_gyro, y=y, seed=randomState, flatten=flatten))
-            else:
-                test_datasets.append(CombinedDataSet(X_acc=X_acc, X_gyro=X_gyro, y=y, seed=randomState, flatten=flatten))
-
-    # Concatenate and shuffle the combined train and test datasets
-    train_data = ConcatDataset(train_datasets)
-    test_data = ConcatDataset(test_datasets)
-    
-    # To see shapes of all individual datasets that were concatenated:
-    for dataset in train_data.datasets:
-        if hasattr(dataset, 'tensors'):
-            print(f"Individual dataset shapes: {[tensor.shape for tensor in dataset.tensors]}")
+def getDataSet(randomState=69, train_percent=0.7, window_size=300, stride=50, flatten=True, random_pick_test_par = False, specific_ppl=None):
+    if specific_ppl == None:
+        # Set random seed for reproducibility
+        random.seed(randomState)
+        torch.manual_seed(randomState)
+        
+        # Select training participants
+        participants = ["00", "01", "02", "03", "04", "05", "06", "07", "08", 
+                    "09", "10", "11", "12", "13", "14", "15", "16"]
+        train_size = int(len(participants) * train_percent)
 
 
-    # Shuffle combined datasets
-    def shuffle_dataset(dataset, seed):
-        indices = torch.randperm(len(dataset))
-        dataset = [dataset[i] for i in indices]
-        return dataset
+        #if we want true random
+        if random_pick_test_par:
+            train_sets = set(random.sample(participants, train_size)) 
+        else:
+        #if we want the first X partipats
+            train_sets = set(participants[:train_size])
 
-    # Apply shuffling on the combined datasets
-    train_data = shuffle_dataset(train_data, randomState)
-    test_data = shuffle_dataset(test_data, randomState)
 
-    return train_data, test_data
+        train_datasets = []
+        test_datasets = []
+
+        for dir in sorted(os.listdir(raw_data_dir)):
+            if dir != '.DS_Store':
+                X_acc, X_gyro, y = participant_accumulator(os.path.join(raw_data_dir, dir), 
+                                                        window_size, stride, flatten)
+                # Create datasets without internal shuffling
+                dataset = CombinedDataSet(X_acc=X_acc, X_gyro=X_gyro, y=y, 
+                                        seed=None, flatten=flatten)  # we remove  internal shuffle since we suffle across th datast at the end
+                
+                if dir in train_sets:
+                    train_datasets.append(dataset)
+                else:
+                    test_datasets.append(dataset)
+
+        # Combine datasets
+        train_data = ConcatDataset(train_datasets)
+        test_data = ConcatDataset(test_datasets)
+
+        # Single shuffle of combined datasets
+        train_indices = torch.randperm(len(train_data))
+        test_indices = torch.randperm(len(test_data))
+        
+        train_data = [train_data[i] for i in train_indices]
+        test_data = [test_data[i] for i in test_indices]
+
+        return train_data, test_data
+    else:
+        participants = set(specific_ppl)
+        datasets = []
+        for dir in sorted(os.listdir(raw_data_dir)):
+            if dir != '.DS_Store' and dir in participants:
+                X_acc, X_gyro, y = participant_accumulator(os.path.join(raw_data_dir, dir), 
+                                                        window_size, stride, flatten)
+                # Create datasets without internal shuffling
+                dataset = CombinedDataSet(X_acc=X_acc, X_gyro=X_gyro, y=y, 
+                                        seed=None, flatten=flatten)  # we remove  internal shuffle since we suffle across th datast at the end
+                
+                datasets.append(dataset)
+
+        # Combine datasets
+        data = ConcatDataset(datasets)
+
+        # Single shuffle of combined datasets
+        data_indices = torch.randperm(len(data))
+        data = [data[i] for i in data_indices]
+
+        return data
+
 
 if __name__ == "__main__":
     train_dataset, test_dataset = getDataSet()
