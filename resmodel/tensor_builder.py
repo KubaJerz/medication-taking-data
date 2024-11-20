@@ -4,7 +4,7 @@ So the path and stuff is hard coded we will only call the get sata set method wi
 
 how to use:
 
-from 0_tensor_builder.py import getDataSet
+from tensor_builder import getDataSet
 train_dataset, test_dataset = getDataSet()
 
 '''
