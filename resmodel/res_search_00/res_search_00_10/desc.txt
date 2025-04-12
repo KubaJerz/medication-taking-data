@@ -1,0 +1,15 @@
+{
+    "id": "res_search_00_10",
+    "window_size": 322,
+    "stride": 25,
+    "train_batch_size": 32,
+    "test_batch_size": -1,
+    "epochs": 125,
+    "learning_rate": 0.07930441997504108,
+    "hidden_blocks": 4,
+    "layer_zero_depth": 2,
+    "layer_scaler": 2,
+    "dropout_rate": 0.11019795081714064,
+    "activation": "ReLU",
+    "normalization": "batch"
+}

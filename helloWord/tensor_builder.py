@@ -22,13 +22,13 @@ import os
 raw_data_dir = '/home/kuba/Documents/Data/Raw/Listerine/3_final'
 
 #if 4 classes
-labels_to_one_hot = {
-    'leftWater' : [[0.0],[0.0],[0.0],[1.0]],
-    'leftLister' : [[0.0],[0.0],[1.0],[0.0]],
-    'rightWater' : [[0.0],[1.0],[0.0],[0.0]],
-    'rightLister' : [[1.0],[0.0],[0.0],[0.0]]
+# labels_to_one_hot = {
+#     'leftWater' : [[0.0],[0.0],[0.0],[1.0]],
+#     'leftLister' : [[0.0],[0.0],[1.0],[0.0]],
+#     'rightWater' : [[0.0],[1.0],[0.0],[0.0]],
+#     'rightLister' : [[1.0],[0.0],[0.0],[0.0]]
 
-}
+# }
 
 
 #if 2 classes
@@ -55,8 +55,10 @@ class CombinedDataSet(Dataset):
             # Concatenate along the last dimension to get torch.Size([669, 1800])
             self.x = torch.cat((X_acc, X_gyro), dim=1)
         else:
-            # Stack along a new dimension if flatten is False
-            self.x = torch.stack((X_acc, X_gyro), dim=1)  # Resulting shape will be torch.Size([669, 2, 900])
+            seq_length = X_acc.shape[-1]  # Gets the last dimension size
+            self.x = torch.stack((X_acc, X_gyro), dim=1).reshape(-1, seq_length)  #wil reshape to [6, seq_length]
+            print(self.x.shape)
+
 
         self.y = y
 
@@ -182,7 +184,6 @@ def getDataSet(randomState=69, train_sets=['00','01','02','03','04','05','06','0
     # Apply shuffling on the combined datasets
     train_data = shuffle_dataset(train_data, randomState)
     test_data = shuffle_dataset(test_data, randomState)
-
     return train_data, test_data
 
 if __name__ == "__main__":
