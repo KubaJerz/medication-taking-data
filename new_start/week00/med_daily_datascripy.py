@@ -1,10 +1,8 @@
 import os
 import json
 import torch
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import scipy.stats as stats
+from torch.utils.data import ConcatDataset
 
 SAVE_DIR = '/home/kuba/Documents/data/raw/listerine/transformed_4sec_windows_med_and_daily'
 
@@ -128,19 +126,23 @@ def participant_accumulator(dir, window_size, stride, flatten):
             gyro_full.extend(gyro)
             y_full.extend(y)
         
-    return acc_full, gyro_full, y_full
+    return torch.tensor(acc_full), torch.tensor(gyro_full), torch.tensor(y_full)
 
-def get_data_combined():
+
+def get_med_data():
+        
+
+        
         train_dirs, dev_dirs, test_dirs = get_directory_splits()
         train_datasets = []
         test_datasets = []
 
-        for dir in sorted(os.listdir(raw_data_dir)):
+        for dir in sorted(os.listdir(RAW_DATA_DIR)):
             if dir != '.DS_Store':
-                X_acc, X_gyro, y = participant_accumulator(os.path.join(raw_data_dir, dir), window_size, stride, flatten)
+                X_acc, X_gyro, y = participant_accumulator(os.path.join(RAW_DATA_DIR, dir), WINDOW_SIZE, STRIDE, FLATTEN)
                 # Create datasets without internal shuffling
                 dataset = CombinedDataSet(X_acc=X_acc, X_gyro=X_gyro, y=y, 
-                                        seed=None, flatten=flatten)  # we remove  internal shuffle since we suffle across th datast at the end
+                                        seed=None, flatten=FLATTEN)  # we remove  internal shuffle since we suffle across th datast at the end
                 
                 if dir in train_sets:
                     train_datasets.append(dataset)
