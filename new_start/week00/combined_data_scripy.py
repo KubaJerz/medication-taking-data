@@ -79,11 +79,6 @@ def get_data(window_size=400,
         filter_static=filter_static
     )
     
-    # # Balance classes if requested
-    # if balance_classes:
-    #     train_data, dev_data, test_data = balance_datasets(med_data, daily_data)
-    # else:
-    #     # Combine datasets for each split
     train_data = ConcatDataset([med_data['train'], daily_data['train']]) if med_data['train'] and daily_data['train'] else None
     dev_data = ConcatDataset([med_data['dev'], daily_data['dev']]) if med_data['dev'] and daily_data['dev'] else None
     test_data = ConcatDataset([med_data['test'], daily_data['test']]) if med_data['test'] and daily_data['test'] else None
@@ -97,74 +92,6 @@ def get_data(window_size=400,
     }
 
 
-# def balance_datasets(med_data, daily_data):
-#     """
-#     Balance the medication and daily datasets to have equal numbers of samples in each class.
-    
-#     Args:
-#         med_data: Dictionary with medication datasets
-#         daily_data: Dictionary with daily living datasets
-        
-#     Returns:
-#         Tuple of (train_dataset, dev_dataset, test_dataset)
-#     """
-#     # Balance training set
-#     train_balanced = balance_split(med_data['train'], daily_data['train'])
-    
-#     # Balance dev set
-#     dev_balanced = balance_split(med_data['dev'], daily_data['dev'])
-    
-#     # Balance test set
-#     test_balanced = balance_split(med_data['test'], daily_data['test'])
-    
-#     return train_balanced, dev_balanced, test_balanced
-
-
-# def balance_split(med_dataset, daily_dataset):
-#     """
-#     Balance a single dataset split to have equal numbers from each class.
-    
-#     Args:
-#         med_dataset: Medication dataset
-#         daily_dataset: Daily living dataset
-        
-#     Returns:
-#         Balanced combined dataset
-#     """
-#     # Handle cases where one dataset might be None
-#     if med_dataset is None:
-#         return daily_dataset
-#     if daily_dataset is None:
-#         return med_dataset
-    
-#     # Get dataset sizes
-#     med_size = len(med_dataset)
-#     daily_size = len(daily_dataset)
-    
-#     # Get the size of the smaller dataset
-#     min_size = min(med_size, daily_size)
-    
-#     # Sample from the larger dataset if needed
-#     if med_size > min_size:
-#         # Sample random indices without replacement
-#         indices = torch.randperm(med_size)[:min_size]
-#         med_dataset_balanced = Subset(med_dataset, indices)
-#         daily_dataset_balanced = daily_dataset
-#     elif daily_size > min_size:
-#         indices = torch.randperm(daily_size)[:min_size]
-#         daily_dataset_balanced = Subset(daily_dataset, indices)
-#         med_dataset_balanced = med_dataset
-#     else:
-#         # Already balanced
-#         med_dataset_balanced = med_dataset
-#         daily_dataset_balanced = daily_dataset
-    
-#     # Combine the balanced datasets
-#     combined_dataset = ConcatDataset([med_dataset_balanced, daily_dataset_balanced])
-    
-#     return combined_dataset
-
-
 if __name__ == "__main__":
     # Example usage
     data = get_data(
@@ -172,17 +99,16 @@ if __name__ == "__main__":
         stride=100,
         flatten=False,
         leakage_option=LeakageOption.NO_LEAKAGE,
-        balance_classes=True
     )
     
-    print(f"Training set size: {len(data['train'])}")
-    print(f"Dev set size: {len(data['dev'])}")
-    print(f"Test set size: {len(data['test'])}")
+    print(f"Combined training set size: {len(data['train'])}")
+    print(f"Combined dev set size: {len(data['dev'])}")
+    print(f"Combined test set size: {len(data['test'])}")
     
     # Check data distribution by looking at the class labels
     def check_class_balance(dataset):
         labels = []
-        for i in range(min(100, len(dataset))):  # Check first 100 samples
+        for i in range(len(dataset)):  # Check first 100 samples
             _, label = dataset[i]
             labels.append(label.item())
         

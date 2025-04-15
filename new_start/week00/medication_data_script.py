@@ -35,9 +35,10 @@ LABELS_TO_ONE_HOT = {
 class MedicationDataset(Dataset):
     """Dataset for medication-taking sensor data."""
     
-    def __init__(self, X, y):
+    def __init__(self, X, y, flatten=False):
         self.X = X
         self.y = y
+        self.flatten = flatten
 
     def __len__(self):
         return len(self.y)

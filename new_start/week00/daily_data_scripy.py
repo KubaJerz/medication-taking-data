@@ -115,6 +115,14 @@ def process_daily_file(file_name, window_size, stride, flatten, filter_static=Tr
     # Convert to tensors
     acc_tensor = torch.tensor(acc_windows)
     gyro_tensor = torch.tensor(gyro_windows)
+
+    # sometimes we can end up with one more or less samples becasue the watch does not perfectly sample data at the same time
+    # this way we make sure that they have the same number of samples
+    acc_tensor = acc_tensor[:min(len(acc_tensor), len(gyro_tensor))]
+    gyro_tensor = gyro_tensor[:min(len(acc_tensor), len(gyro_tensor))]
+
+    if len(acc_tensor) == 0: # We just need to check if acc == 0 becasue abocve we set their lens to the min of the two
+        return torch.tensor([]), torch.tensor([])
     
     # Filter out static windows if requested
     if filter_static:
@@ -134,10 +142,10 @@ def process_daily_file(file_name, window_size, stride, flatten, filter_static=Tr
     return X, y
 
 
-def collect_windows(num_windows_needed, available_files, window_size, stride, flatten, filter_static=True):
+def collect_windows(num_windows_needed, available_dirs, window_size, stride, flatten, filter_static=True):
     """Collect specified number of windows from available files."""
     collected_X = []
-    remaining_files = available_files.copy()
+    remaining_files = available_dirs.copy()
     
     if not remaining_files:
         raise ValueError("No files available to extract windows from")
@@ -151,6 +159,9 @@ def collect_windows(num_windows_needed, available_files, window_size, stride, fl
         # Process the file
         try:
             X, _ = process_daily_file(file_name, window_size, stride, flatten, filter_static)
+
+            if len(X) == 0: # We were not able to sample any windows from the file
+                continue
             
             # If this file provides enough windows to meet the requirement
             if windows_collected + len(X) >= num_windows_needed:
@@ -196,30 +207,30 @@ def load_daily_data(num_train_samples, num_dev_samples, num_test_samples,
     Returns:
         Dictionary with train, dev, and test datasets
     """
-    # Get all available files
-    available_files = [d for d in sorted(os.listdir(DAILY_DIR_PATH)) if d != '.DS_Store']
+    # Get all available dirs
+    available_dirs = [d for d in sorted(os.listdir(DAILY_DIR_PATH)) if os.path.isdir(os.path.join(DAILY_DIR_PATH, d))]    
     
     # Set random seed for reproducibility
     np.random.seed(42)
-    np.random.shuffle(available_files)
+    np.random.shuffle(available_dirs)
     
     # Collect windows for each split
     try:
         # Training set
-        train_X, train_y, available_files = collect_windows(
-            num_train_samples, available_files, window_size, stride, flatten, filter_static
+        train_X, train_y, available_dirs = collect_windows(
+            num_train_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         train_dataset = DailyDataset(train_X, train_y, flatten)
         
         # Dev set
-        dev_X, dev_y, available_files = collect_windows(
-            num_dev_samples, available_files, window_size, stride, flatten, filter_static
+        dev_X, dev_y, available_dirs = collect_windows(
+            num_dev_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         dev_dataset = DailyDataset(dev_X, dev_y, flatten)
         
         # Test set
-        test_X, test_y, available_files = collect_windows(
-            num_test_samples, available_files, window_size, stride, flatten, filter_static
+        test_X, test_y, available_dirs = collect_windows(
+            num_test_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         test_dataset = DailyDataset(test_X, test_y, flatten)
         
@@ -227,7 +238,7 @@ def load_daily_data(num_train_samples, num_dev_samples, num_test_samples,
             'train': train_dataset,
             'dev': dev_dataset,
             'test': test_dataset,
-            'remaining_files': available_files
+            'remaining_files': available_dirs
         }
     
     except Exception as e:
@@ -251,9 +262,9 @@ if __name__ == "__main__":
         flatten=False
     )
     
-    print(f"Training set size: {len(data['train'])}")
-    print(f"Dev set size: {len(data['dev'])}")
-    print(f"Test set size: {len(data['test'])}")
+    print(f"Training daily set size: {len(data['train'])}")
+    print(f"Dev daily set size: {len(data['dev'])}")
+    print(f"Test daily set size: {len(data['test'])}")
     
     # Demonstrate data shapes
     sample_X, sample_y = data['train'][0]
