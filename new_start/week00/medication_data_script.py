@@ -9,7 +9,7 @@ from typing import List, Dict, Optional, Union
 
 # Constants
 RAW_DATA_DIR = '/Users/kuba/Documents/data/raw/medicationTakingData/processed/3_final'
-MEDICINE_CLASS_LABEL = 0
+MEDICINE_CLASS_LABEL = 1
 
 class LeakageOption(Enum):
     """Controls how data is split between train/test sets."""
@@ -147,7 +147,7 @@ def process_participant(participant_dir, window_size, stride, flatten):
         # Stack acc and gyro to shape (n_windows, 2, 3*window_size)
         acc_tensor = torch.tensor(acc_windows_all)  # shape: (n_windows, 3*window_size)
         gyro_tensor = torch.tensor(gyro_windows_all)  # shape: (n_windows, 3*window_size)
-        X = torch.stack((acc_tensor, gyro_tensor), dim=1)  # shape: (n_windows, 2, 3*window_size)
+        X = torch.cat((acc_tensor, gyro_tensor), dim=1)  # shape: (n_windows, 2*3*window_size)
     
     return X, torch.tensor(labels_all)
 

@@ -1,2 +1,8 @@
-we are going to work on procssing the data
-and analyzing the distributions
+we build an mlp and a simple cnn to see how they work
+
+The mlp doe snot work well at all as expected. But we are able to sucesfly over fit on one batch with the mlp
+
+When we use the CNN we are sucefful.
+Much more than actually expected. We get up to a 91 macro f1 but not their is full data leakadge.
+However this is how the paper was written so we will move forward with the full data leakadge for the poster.
+Next we wil build a more robust netowrk anmd train proparly

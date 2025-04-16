@@ -1,0 +1,3 @@
+we build out a robust ResNet from the Regnet space and train
+
+our new model is too big/power full we dont have enoght dat so we overfit right off the start
