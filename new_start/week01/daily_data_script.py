@@ -6,7 +6,8 @@ from torch.utils.data import Dataset, ConcatDataset
 from typing import List, Dict, Tuple, Optional
 
 # Constants
-DAILY_DIR_PATH = "/Users/kuba/Documents/data/raw/kuba_twp5_watchdata_nov19"
+# DAILY_DIR_PATH = "/Users/kuba/Documents/data/raw/kuba_twp5_watchdata_nov19" 
+DAILY_DIR_PATH = "/home/kuba/Documents/data/raw/kuba_watch_data"
 DAILY_CLASS_LABEL = 0
 
 class DailyDataset(Dataset):

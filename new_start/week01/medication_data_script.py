@@ -8,7 +8,9 @@ from enum import Enum
 from typing import List, Dict, Optional, Union
 
 # Constants
-RAW_DATA_DIR = '/Users/kuba/Documents/data/raw/medicationTakingData/processed/3_final'
+# RAW_DATA_DIR = '/Users/kuba/Documents/data/raw/medicationTakingData/processed/3_final'
+RAW_DATA_DIR = '/home/kuba/Documents/data/raw/listerine/3_final'
+
 MEDICINE_CLASS_LABEL = 1
 
 class LeakageOption(Enum):
