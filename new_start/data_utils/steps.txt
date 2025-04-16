@@ -1,0 +1,12 @@
+we are going to work on procssing the data
+
+we have a script for daily_data and medication_data then the combined_data_script is what we sue for training
+
+IMPORTANT:
+The get data will return a dataset that is all medication then all daily gesures stacked on top of each other.
+
+To shuffle it is imperatiuve you do this:
+
+torch.manual_seed(69)
+for X, y in loader:
+    .......CONTINUE.......
