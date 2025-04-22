@@ -1,3 +1,5 @@
-so the simple CNN did beter than the complex model so we will now eval the simple model in the time domain.
-we will feed it rolling windows and then plot the models confidance
-we will do this for both data were there is not medication action and also data where we will paste in a medication action
+we build out a robust ResNet from the Regnet space and train
+
+in week 02 we would have many false posatives.(meaning we predict medication taking when it did not occur) we will try to fix that here.
+- we will NOT remove "No movments to see if those were tricking the model"
+- we will 

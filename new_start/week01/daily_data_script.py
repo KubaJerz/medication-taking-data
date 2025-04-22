@@ -89,6 +89,7 @@ def filter_static_windows(acc, gyro, flatten, acc_threshold=0.05, gyro_threshold
     filtered_acc = acc[valid_indices]
     filtered_gyro = gyro[valid_indices]
     
+    print(f"Filtering removed: {len(acc) - len(filtered_acc)} windows")
     if len(filtered_acc) == 0 or len(filtered_gyro) == 0:
         print("Warning: All windows were filtered out due to lack of movement")
         
