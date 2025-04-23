@@ -1,5 +1,11 @@
 we build out a robust ResNet from the Regnet space and train
 
-in week 02 we would have many false posatives.(meaning we predict medication taking when it did not occur) we will try to fix that here.
+in week 01 we would have many false posatives.(meaning we predict medication taking when it did not occur) we will try to fix that here.
+
+In Dir 00_no_movemnt
 - we will NOT remove "No movments to see if those were tricking the model"
+        - We find they are not significalty causing the false posatives but we will not loger remove them for complete sake
+
+
+In 01_
 - we will 
