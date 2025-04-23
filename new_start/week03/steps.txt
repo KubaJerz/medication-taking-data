@@ -1,0 +1,6 @@
+We will do the same as in week02 but now using the simpler smaller cnn model not the regnet
+
+- no movment un like in week02 (wich the result was confuing)
+    -WE found that NOt removing the no "low" movment windows helps the model get lower FP rates
+
+- now we again augmet the positive weight 

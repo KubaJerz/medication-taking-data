@@ -4,8 +4,13 @@ in week 01 we would have many false posatives.(meaning we predict medication tak
 
 In Dir 00_no_movemnt
 - we will NOT remove "No movments to see if those were tricking the model"
-        - We find they are not significalty causing the false posatives but we will not loger remove them for complete sake
+        - We find they are not significalty causing the false posative and actualt it make the performace worse if we dont remove them so we continue to remove them
 
 
 In 01_
-- we will 
+- we will augment the weight in the loss function for the positive class
+- meaning the medication class with be weighted less resulting in more emphasis on the daily living class
+        - We find that yes doing  a weight of about 0.87 for the posativ eweight helps
+
+PAUSE!! 
+We find this model is too deep we now go back to the simple SNN and repeat these experiments in week03
