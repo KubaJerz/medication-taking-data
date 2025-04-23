@@ -122,21 +122,6 @@ def smooth_predictions(prediction_sum, counts):
     averaged_predictions = prediction_sum / (counts + 0.00001)
     return averaged_predictions
 
-def overlap_calc(window_start, window_size, idxs):
-    window_end = window_start + window_size
-    max_overlap = 0.0
-    
-    for start, end in idxs:
-        # see if there is overlap
-        overlap_start = max(window_start, start)
-        overlap_end = min(window_end, end)
-        
-        if overlap_end > overlap_start:  # if true there is an overlap
-            overlap_length = overlap_end - overlap_start
-            overlap_percentage = overlap_length / window_size
-            max_overlap = max(max_overlap, overlap_percentage)
-    
-    return max_overlap
 
 def plot_full_preds(x, y, z, avg_preds, idxs, confidance_threshold_for_mean, scale_rate=50):
     fig, ax = plt.subplots(figsize=(18, 6))
@@ -178,27 +163,63 @@ def show_cfm(TP, TN, FP, FN, total):
     cf_disp = ConfusionMatrixDisplay(confusion_matrix=cf)
     cf_disp.plot()
 
-def count_medication_taking_predictions(avg_preds, idxs, window_size, stride, conf_threshold, overlap_threshold=0.45):
-    TPs = 0
-    TNs = 0
-    FPs = 0
-    FNs = 0
-    total_num_windows = 0
-    for i in range(0, len(avg_preds) - window_size, stride):
-        total_num_windows += 1
-        window = avg_preds[i: i + window_size]
-        window_mean = np.mean(window)
-        overlap = overlap_calc(i, window_size, idxs)
-        if (window_mean >= conf_threshold) and (overlap < overlap_threshold):
-            FPs += 1
-        elif(window_mean >= conf_threshold) and (overlap >= overlap_threshold):
-            TPs += 1
-        elif (window_mean < conf_threshold) and (overlap >= overlap_threshold):
-            FNs += 1
-        elif (window_mean < conf_threshold) and (overlap < overlap_threshold):
-            TNs += 1
+def count_peaks_above_threshold(array, threshold):
+    if len(array) < 3:  # Need at least 3 points to have a peak
+        return 0, []
+    
+    peak_count = 0
+    in_peak = False
+    peak_idxs = []
+    
+    for i in range(1, len(array)):
+        # start a peak when avg conf rises above threshold
+        if not in_peak and array[i] > threshold and array[i] > array[i-1]:
+            in_peak = True
+            peak_count += 1
+            start = i
+            
+        # End of peak (value falls below threshold)
+        elif in_peak and array[i] <= threshold:
+            in_peak = False
+            end = i-1
+            peak_idxs.append((start, end))
+    
+    #  case where the array ends and we still in a peak
+    if in_peak:
+        peak_idxs.append((start, len(array)-1))
+        
+    return peak_count, peak_idxs
 
-    return TPs, TNs, FPs, FNs, total_num_windows  
+def check_overlapping_peaks(peak_idxs, bout_idxs, overlap_threshold=0.85):
+    TP = []  # true positives
+    FP = []  # fasle positives
+    
+    for peak in peak_idxs:
+        peak_start, peak_end = peak
+        peak_length = peak_end - peak_start + 1
+        
+        is_overlapping = False
+        
+        for bout in bout_idxs:
+            bout_start, bout_end = bout
+            
+            overlap_start = max(peak_start, bout_start)
+            overlap_end = min(peak_end, bout_end)
+            
+            if overlap_start <= overlap_end:  
+                overlap_length = overlap_end - overlap_start + 1
+                
+                peak_overlap_ratio = overlap_length / peak_length
+                
+                if peak_overlap_ratio >= overlap_threshold:                    
+                    TP.append(peak)
+                    is_overlapping = True
+                    break
+        
+        if not is_overlapping:
+            FP.append(peak)
+    
+    return TP, FP
 
 
 def eval_in_time_domain(model, path_to_daily_dir, path_to_bout_dir, window_size, stride, confidance_threshold_for_mean=0.8, overlap_threshold=0.45, min_bout_len=0, num_bouts_to_samp=20, device='cpu', flatten=False):
@@ -208,7 +229,7 @@ def eval_in_time_domain(model, path_to_daily_dir, path_to_bout_dir, window_size,
     acc = acc_with_timestamp.iloc[:, 1:4].to_numpy()
     gyro = gyro_with_timestamp.iloc[:, 1:4].to_numpy() 
     
-    acc_augmented, gyro_augmented, idxs = paste_in_bouts(sampled_bouts, acc, gyro)
+    acc_augmented, gyro_augmented, bout_idxs = paste_in_bouts(sampled_bouts, acc, gyro)
 
     acc_windows, gyro_windows = process_recording(acc_augmented, gyro_augmented, window_size=window_size, stride=stride, flatten=flatten)
     all_windows = torch.cat((acc_windows, gyro_windows), dim=1)
@@ -243,16 +264,23 @@ def eval_in_time_domain(model, path_to_daily_dir, path_to_bout_dir, window_size,
 
 
     x, y, z = acc_augmented[:,0], acc_augmented[:,1], acc_augmented[:,2]
-    plot_full_preds(x, y, z, avg_preds, idxs, confidance_threshold_for_mean)
+    plot_full_preds(x, y, z, avg_preds, bout_idxs, confidance_threshold_for_mean)
 
-    TP, TN, FP, FN, total = count_medication_taking_predictions(avg_preds, idxs, window_size=window_size, stride=stride, conf_threshold=confidance_threshold_for_mean, overlap_threshold=overlap_threshold)
-    print(f"There are {FP} FP's of {total} total windows (FP is -> confidance over: {confidance_threshold_for_mean} and less that {overlap_threshold * 100}% overlap with a real bout)")
-    print(f"FP's are at rate of {(FP/total)*100:.2f}%")
-    print(f"Fn's are at rate of {(FN/total)*100:.4f}%")
+    total_peak_count, peak_idxs = count_peaks_above_threshold(avg_preds, threshold=confidance_threshold_for_mean)
+    TP, FP = check_overlapping_peaks(peak_idxs, bout_idxs, overlap_threshold=overlap_threshold)
+    FP_count = len(FP)
+    TP_count = len(TP)
 
-    show_cfm(TP, TN, FP, FN, total)
+    print(f"There are {FP_count} FP's of {total_peak_count} total peaks (confidance over: {confidance_threshold_for_mean} and does not overlap with bout threshold:{overlap_threshold})")
+    print(f"FP's are at rate of {(FP_count/total_peak_count)*100:.2f}%")
+    print(f"TP's are at rate of {(TP_count/total_peak_count)*100:.4f}%")
+    print(f"Out of {num_bouts_to_samp} model found {TP_count} ({(TP_count/num_bouts_to_samp)*100:.2f})")
+
+    FN_count = num_bouts_to_samp - TP_count
+    TN_count = int(len(acc_augmented / 400) - TP_count - FN_count - FP_count)
+    show_cfm(TP_count, TN_count, FP_count, FN_count, total_peak_count)
     
-    return TP, TN, FP, FN, total 
+    return TP_count, TN_count, FP_count, FN_count, total_peak_count 
 
 
 
