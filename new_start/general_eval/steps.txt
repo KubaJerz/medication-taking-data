@@ -1,0 +1,3 @@
+so the simple CNN did beter than the complex model so we will now eval the simple model in the time domain.
+we will feed it rolling windows and then plot the models confidance
+we will do this for both data were there is not medication action and also data where we will paste in a medication action

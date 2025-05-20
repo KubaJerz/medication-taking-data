@@ -18,7 +18,8 @@ def get_data(window_size=400,
             test_p=0.1,
             leakage_option=LeakageOption.NO_LEAKAGE,
             specific_participants=None,
-            filter_static=True):
+            filter_static=True,
+            oversamp_daily=1.0):
     """
     Get both medication and daily living gesture data, with balanced classes.
     
@@ -33,6 +34,7 @@ def get_data(window_size=400,
         specific_participants: List of specific participant IDs to include (optional)
         balance_classes: Whether to balance the classes to have equal numbers
         filter_static: Whether to filter out windows with little movement in daily data
+        oversamp_daily: to oversamp daily do (>1) to keep same as mediation windows do (=1) JUST FOR TRAINING SET
         
     Returns:
         Dictionary with train, dev, and test datasets
@@ -70,7 +72,7 @@ def get_data(window_size=400,
     
     # Load daily living data (class 1) with matching sizes
     daily_data = load_daily_data(
-        num_train_samples=train_med_size,
+        num_train_samples= int(train_med_size * oversamp_daily),
         num_dev_samples=dev_med_size,
         num_test_samples=test_med_size,
         window_size=window_size,

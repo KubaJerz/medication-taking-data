@@ -1,0 +1,7 @@
+What to do next if picking back up
+
+1. as was theorized but never tested due to time. Some widows are too fat we should proparly re lable to contain jus the gesute nad not the head or path_to_daily_dir
+
+2. we alwasy used stride=50 we shoudl try stride at lower number and get more windows so how effects results
+
+3. hold out one person then fine tune on them to see how much that would help

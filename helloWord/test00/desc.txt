@@ -1,1 +1,0 @@
-"model that was trained was named BASIC_MLP located at /home/kuba/Projects/MedicationTakingData/helloWord/basic_mlp.py"

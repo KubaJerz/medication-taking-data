@@ -216,6 +216,7 @@ def load_daily_data(num_train_samples, num_dev_samples, num_test_samples,
     np.random.seed(42)
     np.random.shuffle(available_dirs)
     
+    print('All daily dir:',available_dirs)
     # Collect windows for each split
     try:
         # Training set
@@ -223,18 +224,24 @@ def load_daily_data(num_train_samples, num_dev_samples, num_test_samples,
             num_train_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         train_dataset = DailyDataset(train_X, train_y, flatten)
+        print('Daily dir after train:',available_dirs)
+        
         
         # Dev set
         dev_X, dev_y, available_dirs = collect_windows(
             num_dev_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         dev_dataset = DailyDataset(dev_X, dev_y, flatten)
+        print('Daily dir after dev:',available_dirs)
+
         
         # Test set
         test_X, test_y, available_dirs = collect_windows(
             num_test_samples, available_dirs, window_size, stride, flatten, filter_static
         )
         test_dataset = DailyDataset(test_X, test_y, flatten)
+        print('Daily dir for test:',available_dirs)
+
         
         return {
             'train': train_dataset,
